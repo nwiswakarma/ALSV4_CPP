@@ -13,6 +13,7 @@
 #include "ALSPlayerController.generated.h"
 
 class AALSBaseCharacter;
+class AALSMBaseCharacter;
 
 /**
  * Player controller class
@@ -26,7 +27,12 @@ public:
 	void OnRestartPawn(APawn* NewPawn);
 
 private:
+
 	/** Main character reference */
 	UPROPERTY()
 	AALSBaseCharacter* PossessedCharacter = nullptr;
+
+	/** Main character reference (Modular) */
+	UPROPERTY()
+	AALSMBaseCharacter* PossessedCharacterM = nullptr;
 };

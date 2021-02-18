@@ -5,7 +5,7 @@
 
 
 #include "Character/ALSCharacterMovementComponent.h"
-//#include "Character/ALSBaseCharacter.h"
+#include "Character/ALSBaseCharacter.h"
 
 UALSCharacterMovementComponent::UALSCharacterMovementComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

@@ -29,7 +29,7 @@ AALSMBaseCharacter::AALSMBaseCharacter(const FObjectInitializer& ObjectInitializ
 {
 	PrimaryActorTick.bCanEverTick = true;
 	//MantleTimeline = CreateDefaultSubobject<UTimelineComponent>(FName(TEXT("MantleTimeline")));
-	bUseControllerRotationYaw = 0;
+	bUseControllerRotationYaw = false;
 	bReplicates = true;
 	SetReplicatingMovement(true);
 }
@@ -88,9 +88,9 @@ void AALSMBaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 	DOREPLIFETIME(AALSMBaseCharacter, DesiredGait);
 	//DOREPLIFETIME_CONDITION(AALSMBaseCharacter, DesiredStance, COND_SkipOwner);
-	//DOREPLIFETIME_CONDITION(AALSMBaseCharacter, DesiredRotationMode, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AALSMBaseCharacter, DesiredRotationMode, COND_SkipOwner);
 
-	//DOREPLIFETIME_CONDITION(AALSMBaseCharacter, RotationMode, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AALSMBaseCharacter, RotationMode, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(AALSMBaseCharacter, OverlayState, COND_SkipOwner);
 	//DOREPLIFETIME_CONDITION(AALSMBaseCharacter, ViewMode, COND_SkipOwner);
 }
@@ -123,7 +123,7 @@ void AALSMBaseCharacter::BeginPlay()
 	FALSAnimCharacterInformation& AnimData = MainAnimInstance->GetCharacterInformationMutable();
 	MainAnimInstance->Gait = DesiredGait;
 	//MainAnimInstance->Stance = DesiredStance;
-	//MainAnimInstance->RotationMode = DesiredRotationMode;
+	MainAnimInstance->RotationMode = DesiredRotationMode;
 	//AnimData.ViewMode = ViewMode;
 	MainAnimInstance->OverlayState = OverlayState;
 	AnimData.PrevMovementState = PrevMovementState;
@@ -132,7 +132,7 @@ void AALSMBaseCharacter::BeginPlay()
 	// Update states to use the initial desired values.
 	SetGait(DesiredGait);
 	//SetStance(DesiredStance);
-	//SetRotationMode(DesiredRotationMode);
+	SetRotationMode(DesiredRotationMode);
 	//SetViewMode(ViewMode);
 	SetOverlayState(OverlayState);
 
@@ -233,6 +233,26 @@ void AALSMBaseCharacter::SetGait(const EALSGait NewGait)
 	}
 }
 
+void AALSMBaseCharacter::SetRotationMode(const EALSRotationMode NewRotationMode)
+{
+	if (RotationMode != NewRotationMode)
+	{
+		const EALSRotationMode Prev = RotationMode;
+		RotationMode = NewRotationMode;
+		OnRotationModeChanged(Prev);
+
+		if (GetLocalRole() == ROLE_AutonomousProxy)
+		{
+			Server_SetRotationMode(NewRotationMode);
+		}
+	}
+}
+
+void AALSMBaseCharacter::Server_SetRotationMode_Implementation(EALSRotationMode NewRotationMode)
+{
+	SetRotationMode(NewRotationMode);
+}
+
 /** Movement System */
 
 void AALSMBaseCharacter::SetHasMovementInput(bool bNewHasMovementInput)
@@ -243,41 +263,44 @@ void AALSMBaseCharacter::SetHasMovementInput(bool bNewHasMovementInput)
 
 FALSMovementSettings AALSMBaseCharacter::GetTargetMovementSettings() const
 {
-    //if (RotationMode == EALSRotationMode::VelocityDirection)
-    //{
-    //    if (Stance == EALSStance::Standing)
-    //    {
-    //        return MovementData.VelocityDirection.Standing;
-    //    }
-    //    if (Stance == EALSStance::Crouching)
-    //    {
-    //        return MovementData.VelocityDirection.Crouching;
-    //    }
-    //}
-    //else
-    //if (RotationMode == EALSRotationMode::LookingDirection)
-    //{
-    //    if (Stance == EALSStance::Standing)
-    //    {
-    //        return MovementData.LookingDirection.Standing;
-    //    }
-    //    if (Stance == EALSStance::Crouching)
-    //    {
-    //        return MovementData.LookingDirection.Crouching;
-    //    }
-    //}
-    //else
-    //if (RotationMode == EALSRotationMode::Aiming)
-    //{
-    //    if (Stance == EALSStance::Standing)
-    //    {
-    //        return MovementData.Aiming.Standing;
-    //    }
-    //    if (Stance == EALSStance::Crouching)
-    //    {
-    //        return MovementData.Aiming.Crouching;
-    //    }
-    //}
+    if (RotationMode == EALSRotationMode::VelocityDirection)
+    {
+        //if (Stance == EALSStance::Standing)
+        //{
+        //    return MovementData.VelocityDirection.Standing;
+        //}
+        //if (Stance == EALSStance::Crouching)
+        //{
+        //    return MovementData.VelocityDirection.Crouching;
+        //}
+        return MovementData.VelocityDirection.Standing;
+    }
+    else
+    if (RotationMode == EALSRotationMode::LookingDirection)
+    {
+        //if (Stance == EALSStance::Standing)
+        //{
+        //    return MovementData.LookingDirection.Standing;
+        //}
+        //if (Stance == EALSStance::Crouching)
+        //{
+        //    return MovementData.LookingDirection.Crouching;
+        //}
+        return MovementData.LookingDirection.Standing;
+    }
+    else
+    if (RotationMode == EALSRotationMode::Aiming)
+    {
+        //if (Stance == EALSStance::Standing)
+        //{
+        //    return MovementData.Aiming.Standing;
+        //}
+        //if (Stance == EALSStance::Crouching)
+        //{
+        //    return MovementData.Aiming.Crouching;
+        //}
+        return MovementData.Aiming.Standing;
+    }
 
 	// Default to velocity direction standing
 	return MovementData.VelocityDirection.Standing;
@@ -409,17 +432,18 @@ void AALSMBaseCharacter::OnMovementStateChanged(const EALSMovementState Previous
 	//}
 }
 
-//void AALSMBaseCharacter::OnRotationModeChanged(EALSRotationMode PreviousRotationMode)
-//{
-//    MainAnimInstance->RotationMode = RotationMode;
-//
-//    if (RotationMode == EALSRotationMode::VelocityDirection && ViewMode == EALSViewMode::FirstPerson)
-//    {
-//        // If the new rotation mode is Velocity Direction and the character is in First Person,
-//        // set the viewmode to Third Person.
-//        SetViewMode(EALSViewMode::ThirdPerson);
-//    }
-//}
+void AALSMBaseCharacter::OnRotationModeChanged(EALSRotationMode PreviousRotationMode)
+{
+    MainAnimInstance->RotationMode = RotationMode;
+
+    //if (RotationMode == EALSRotationMode::VelocityDirection && ViewMode == EALSViewMode::FirstPerson)
+    if (RotationMode == EALSRotationMode::VelocityDirection)
+    {
+        // If the new rotation mode is Velocity Direction and the character is in First Person,
+        // set the viewmode to Third Person.
+        //SetViewMode(EALSViewMode::ThirdPerson);
+    }
+}
 
 void AALSMBaseCharacter::OnOverlayStateChanged(const EALSOverlayState PreviousState)
 {
@@ -576,7 +600,6 @@ void AALSMBaseCharacter::UpdateDynamicMovementSettingsStandalone(EALSGait Allowe
 
 void AALSMBaseCharacter::UpdateGroundedRotation(float DeltaTime)
 {
-    /*
 	if (MovementAction == EALSMovementAction::None)
 	{
 		const bool bCanUpdateMovingRot = ((bIsMoving && bHasMovementInput) || Speed > 150.0f) && !HasAnyRootMotion();
@@ -587,10 +610,15 @@ void AALSMBaseCharacter::UpdateGroundedRotation(float DeltaTime)
 			if (RotationMode == EALSRotationMode::VelocityDirection)
 			{
 				// Velocity Direction Rotation
-				SmoothCharacterRotation({0.0f, LastVelocityRotation.Yaw, 0.0f}, 800.0f, GroundedRotationRate,
-				                        DeltaTime);
+				SmoothCharacterRotation(
+                    {0.0f, LastVelocityRotation.Yaw, 0.0f},
+                    800.0f,
+                    GroundedRotationRate,
+                    DeltaTime
+                    );
 			}
-			else if (RotationMode == EALSRotationMode::LookingDirection)
+			else
+            if (RotationMode == EALSRotationMode::LookingDirection)
 			{
 				// Looking Direction Rotation
 				float YawValue;
@@ -600,31 +628,43 @@ void AALSMBaseCharacter::UpdateGroundedRotation(float DeltaTime)
 				}
 				else
 				{
-					// Walking or Running..
+					// Walking or Running
 					const float YawOffsetCurveVal = MainAnimInstance->GetCurveValue(FName(TEXT("YawOffset")));
 					YawValue = AimingRotation.Yaw + YawOffsetCurveVal;
 				}
-				SmoothCharacterRotation({0.0f, YawValue, 0.0f}, 500.0f, GroundedRotationRate, DeltaTime);
+				SmoothCharacterRotation(
+                    {0.0f, YawValue, 0.0f},
+                    500.0f,
+                    GroundedRotationRate,
+                    DeltaTime
+                    );
 			}
-			else if (RotationMode == EALSRotationMode::Aiming)
+			else
+            if (RotationMode == EALSRotationMode::Aiming)
 			{
 				const float ControlYaw = AimingRotation.Yaw;
-				SmoothCharacterRotation({0.0f, ControlYaw, 0.0f}, 1000.0f, 20.0f, DeltaTime);
+				SmoothCharacterRotation(
+                    {0.0f, ControlYaw, 0.0f},
+                    1000.0f,
+                    20.0f,
+                    DeltaTime
+                    );
 			}
 		}
 		else
 		{
 			// Not Moving
 
-			if ((ViewMode == EALSViewMode::ThirdPerson && RotationMode == EALSRotationMode::Aiming) ||
-				ViewMode == EALSViewMode::FirstPerson)
+			//if ((ViewMode == EALSViewMode::ThirdPerson && RotationMode == EALSRotationMode::Aiming) || ViewMode == EALSViewMode::FirstPerson)
+			if (RotationMode == EALSRotationMode::Aiming)
 			{
 				LimitRotation(-100.0f, 100.0f, 20.0f, DeltaTime);
 			}
 
 			// Apply the RotationAmount curve from Turn In Place Animations.
-			// The Rotation Amount curve defines how much rotation should be applied each frame,
-			// and is calculated for animations that are animated at 30fps.
+			// The Rotation Amount curve defines how much rotation
+            // should be applied each frame, and is calculated for animations
+            // that are animated at 30fps.
 
 			const float RotAmountCurve = MainAnimInstance->GetCurveValue(FName(TEXT("RotationAmount")));
 
@@ -656,8 +696,8 @@ void AALSMBaseCharacter::UpdateGroundedRotation(float DeltaTime)
 	}
 
 	// Other actions are ignored...
-    */
 
+    /*
     const bool bCanUpdateMovingRot = ((bIsMoving && bHasMovementInput) || Speed > 150.0f) && !HasAnyRootMotion();
 
     if (bCanUpdateMovingRot)
@@ -700,6 +740,7 @@ void AALSMBaseCharacter::UpdateGroundedRotation(float DeltaTime)
             TargetRotation = GetActorRotation();
         }
     }
+    */
 }
 
 /** Utils */
@@ -771,6 +812,26 @@ float AALSMBaseCharacter::CalculateGroundedRotationRate() const
 	const float CurveVal = CurrentMovementSettings.RotationRateCurve->GetFloatValue(MappedSpeedVal);
 	const float ClampedAimYawRate = FMath::GetMappedRangeValueClamped({0.0f, 300.0f}, {1.0f, 3.0f}, AimYawRate);
 	return CurveVal * ClampedAimYawRate;
+}
+
+void AALSMBaseCharacter::LimitRotation(
+    float AimYawMin,
+    float AimYawMax,
+    float InterpSpeed,
+    float DeltaTime
+    )
+{
+	// Prevent the character from rotating past a certain angle.
+	FRotator Delta = AimingRotation - GetActorRotation();
+	Delta.Normalize();
+	const float RangeVal = Delta.Yaw;
+
+	if (RangeVal < AimYawMin || RangeVal > AimYawMax)
+	{
+		const float ControlRotYaw = AimingRotation.Yaw;
+		const float TargetYaw = ControlRotYaw + (RangeVal > 0.0f ? AimYawMin : AimYawMax);
+		SmoothCharacterRotation({0.0f, TargetYaw, 0.0f}, 0.0f, InterpSpeed, DeltaTime);
+	}
 }
 
 void AALSMBaseCharacter::SetOverlayState(const EALSOverlayState NewState)
@@ -915,10 +976,10 @@ void AALSMBaseCharacter::SetAimYawRate(float NewAimYawRate)
 
 /** Replication */
 
-//void AALSMBaseCharacter::OnRep_RotationMode(EALSRotationMode PrevRotMode)
-//{
-//    OnRotationModeChanged(PrevRotMode);
-//}
+void AALSMBaseCharacter::OnRep_RotationMode(EALSRotationMode PrevRotMode)
+{
+    OnRotationModeChanged(PrevRotMode);
+}
 
 void AALSMBaseCharacter::OnRep_OverlayState(EALSOverlayState PrevOverlayState)
 {

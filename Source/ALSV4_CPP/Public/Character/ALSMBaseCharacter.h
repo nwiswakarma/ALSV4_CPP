@@ -90,14 +90,14 @@ public:
 	UFUNCTION(BlueprintGetter, Category = "ALS|CharacterStates")
 	EALSGait GetDesiredGait() const { return DesiredGait; }
 
-	//UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
-	//void SetRotationMode(EALSRotationMode NewRotationMode);
+	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
+	void SetRotationMode(EALSRotationMode NewRotationMode);
 
-	//UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
-	//void Server_SetRotationMode(EALSRotationMode NewRotationMode);
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
+	void Server_SetRotationMode(EALSRotationMode NewRotationMode);
 
-	//UFUNCTION(BlueprintGetter, Category = "ALS|Character States")
-	//EALSRotationMode GetRotationMode() const { return RotationMode; }
+	UFUNCTION(BlueprintGetter, Category = "ALS|Character States")
+	EALSRotationMode GetRotationMode() const { return RotationMode; }
 
 	//UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
 	//void SetViewMode(EALSViewMode NewViewMode);
@@ -236,8 +236,8 @@ protected:
 
 	/** Input */
 
-	//UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
-	//EALSRotationMode DesiredRotationMode = EALSRotationMode::LookingDirection;
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
+	EALSRotationMode DesiredRotationMode = EALSRotationMode::LookingDirection;
 
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = "ALS|Input")
 	EALSGait DesiredGait = EALSGait::Running;
@@ -328,8 +328,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values")
 	EALSMovementAction MovementAction = EALSMovementAction::None;
 
-	//UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values", ReplicatedUsing = OnRep_RotationMode)
-	//EALSRotationMode RotationMode = EALSRotationMode::LookingDirection;
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values", ReplicatedUsing = OnRep_RotationMode)
+	EALSRotationMode RotationMode = EALSRotationMode::LookingDirection;
 
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|State Values")
 	EALSGait Gait = EALSGait::Walking;
@@ -359,8 +359,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "ALS|Rotation System")
 	FRotator InAirRotation = FRotator::ZeroRotator;
 
-	//UPROPERTY(BlueprintReadOnly, Category = "ALS|Rotation System")
-	//float YawOffset = 0.0f;
+	UPROPERTY(BlueprintReadOnly, Category = "ALS|Rotation System")
+	float YawOffset = 0.0f;
 
 	/** Cached Variables */
 
@@ -401,7 +401,7 @@ protected:
 
 	//virtual void OnStanceChanged(EALSStance PreviousStance);
 
-	//virtual void OnRotationModeChanged(EALSRotationMode PreviousRotationMode);
+	virtual void OnRotationModeChanged(EALSRotationMode PreviousRotationMode);
 
 	//virtual void OnGaitChanged(EALSGait PreviousGait);
 
@@ -444,12 +444,12 @@ protected:
 
 	float CalculateGroundedRotationRate() const;
 
-	//void LimitRotation(
-    //    float AimYawMin,
-    //    float AimYawMax,
-    //    float InterpSpeed,
-    //    float DeltaTime
-    //    );
+	void LimitRotation(
+        float AimYawMin,
+        float AimYawMax,
+        float InterpSpeed,
+        float DeltaTime
+        );
 
 	void SetMovementModel();
 
@@ -492,8 +492,8 @@ protected:
 	//void LookingDirectionPressedAction();
 
 	/** Replication */
-	//UFUNCTION()
-	//void OnRep_RotationMode(EALSRotationMode PrevRotMode);
+	UFUNCTION()
+	void OnRep_RotationMode(EALSRotationMode PrevRotMode);
 
 	//UFUNCTION()
 	//void OnRep_ViewMode(EALSViewMode PrevViewMode);

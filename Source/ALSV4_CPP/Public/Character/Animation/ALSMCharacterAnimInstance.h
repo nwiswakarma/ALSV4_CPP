@@ -57,6 +57,18 @@ public:
 	bool ShouldMoveCheck() const;
 
 	/**
+	 * Only perform a Turn In Place check if the character
+     * is looking toward the camera in Third Person,
+	 * and if the "Enable Transition" curve is fully weighted.
+     *
+     * The Enable_Transition curve is modified within certain
+	 * states of the AnimBP so that the character can only turn
+     * while in those states.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Grounded")
+	bool CanTurnInPlace() const;
+
+	/**
 	 * Only perform a Dynamic Transition check
      * if the "Enable Transition" curve is fully weighted.
      *
@@ -83,8 +95,8 @@ public:
 	//UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
 	//FALSMovementAction MovementAction = EALSMovementAction::None;
 
-	//UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
-	//FALSRotationMode RotationMode = EALSRotationMode::LookingDirection;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
+	FALSRotationMode RotationMode = EALSRotationMode::LookingDirection;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Read Only Data|Character Information")
 	FALSGait Gait = EALSGait::Walking;
@@ -264,18 +276,18 @@ private:
 
 	//void RotateInPlaceCheck();
 
-	//void TurnInPlaceCheck(float DeltaSeconds);
+	void TurnInPlaceCheck(float DeltaSeconds);
 
 	void DynamicTransitionCheck();
 
 	FALSVelocityBlend CalculateVelocityBlend() const;
 
-	//void TurnInPlace(
-    //    FRotator TargetRotation,
-    //    float PlayRateScale,
-    //    float StartTime,
-    //    bool OverrideCurrent
-    //    );
+	void TurnInPlace(
+        FRotator TargetRotation,
+        float PlayRateScale,
+        float StartTime,
+        bool OverrideCurrent
+        );
 
 	/** Movement */
 

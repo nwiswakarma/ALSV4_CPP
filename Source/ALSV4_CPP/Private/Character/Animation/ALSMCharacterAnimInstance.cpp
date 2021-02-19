@@ -92,14 +92,14 @@ void UALSMCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
             //}
 
             // Turn In Place
-            if (CanTurnInPlace())
-            {
-                TurnInPlaceCheck(DeltaSeconds);
-            }
-            else
-            {
-                TurnInPlaceValues.ElapsedDelayTime = 0.0f;
-            }
+            //if (CanTurnInPlace())
+            //{
+            //    TurnInPlaceCheck(DeltaSeconds);
+            //}
+            //else
+            //{
+            //    TurnInPlaceValues.ElapsedDelayTime = 0.0f;
+            //}
 
             // Dynamic Transition
             if (CanDynamicTransition())

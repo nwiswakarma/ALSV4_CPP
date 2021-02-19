@@ -233,6 +233,35 @@ void AALSMBaseCharacter::SetGait(const EALSGait NewGait)
 	}
 }
 
+void AALSMBaseCharacter::SetDesiredGait(const EALSGait NewGait)
+{
+	DesiredGait = NewGait;
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		Server_SetDesiredGait(NewGait);
+	}
+}
+
+void AALSMBaseCharacter::Server_SetDesiredGait_Implementation(EALSGait NewGait)
+{
+	SetDesiredGait(NewGait);
+}
+
+void AALSMBaseCharacter::SetDesiredRotationMode(EALSRotationMode NewRotMode)
+{
+	DesiredRotationMode = NewRotMode;
+
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		Server_SetDesiredRotationMode(NewRotMode);
+	}
+}
+
+void AALSMBaseCharacter::Server_SetDesiredRotationMode_Implementation(EALSRotationMode NewRotMode)
+{
+	SetDesiredRotationMode(NewRotMode);
+}
+
 void AALSMBaseCharacter::SetRotationMode(const EALSRotationMode NewRotationMode)
 {
 	if (RotationMode != NewRotationMode)
@@ -696,51 +725,6 @@ void AALSMBaseCharacter::UpdateGroundedRotation(float DeltaTime)
 	}
 
 	// Other actions are ignored...
-
-    /*
-    const bool bCanUpdateMovingRot = ((bIsMoving && bHasMovementInput) || Speed > 150.0f) && !HasAnyRootMotion();
-
-    if (bCanUpdateMovingRot)
-    {
-        const float GroundedRotationRate = CalculateGroundedRotationRate();
-
-        const float YawOffsetCurveVal = MainAnimInstance->GetCurveValue(FName(TEXT("YawOffset")));
-        float YawValue = AimingRotation.Yaw + YawOffsetCurveVal;
-
-        SmoothCharacterRotation(
-            FRotator(0.0f, YawValue, 0.0f),
-            500.0f,
-            GroundedRotationRate,
-            DeltaTime
-            );
-    }
-    // Not Moving
-    else
-    {
-        // Apply the RotationAmount curve from Turn In Place Animations.
-        //
-        // The Rotation Amount curve defines how much rotation
-        // should be applied each frame, and is calculated for animations
-        // that are animated at 30fps.
-
-        const float RotAmountCurve = MainAnimInstance->GetCurveValue(FName(TEXT("RotationAmount")));
-
-        if (FMath::Abs(RotAmountCurve) > 0.001f)
-        {
-            if (GetLocalRole() == ROLE_AutonomousProxy)
-            {
-                TargetRotation.Yaw = UKismetMathLibrary::NormalizeAxis(
-                    TargetRotation.Yaw + (RotAmountCurve * (DeltaTime / (1.0f / 30.0f))));
-                SetActorRotation(TargetRotation);
-            }
-            else
-            {
-                AddActorWorldRotation({0, RotAmountCurve * (DeltaTime / (1.0f / 30.0f)), 0});
-            }
-            TargetRotation = GetActorRotation();
-        }
-    }
-    */
 }
 
 /** Utils */

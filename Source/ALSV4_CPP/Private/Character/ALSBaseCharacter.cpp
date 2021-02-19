@@ -205,7 +205,8 @@ void AALSBaseCharacter::RagdollStart()
 	if (UKismetSystemLibrary::IsDedicatedServer(GetWorld()))
 	{
 		DefVisBasedTickOp = GetMesh()->VisibilityBasedAnimTickOption;
-		GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+		//GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+		GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPose;
 	}
 	TargetRagdollLocation = GetMesh()->GetSocketLocation(FName(TEXT("Pelvis")));
 	ServerRagdollPull = 0;

@@ -25,8 +25,6 @@ public:
 
 	virtual void BeginPlay() override;
 
-	//virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
 	virtual FTransform GetThirdPersonPivotTarget() override;
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera System")
@@ -39,11 +37,8 @@ public:
 	FVector GetControlLocation() const { return ControlLocation; }
 
 public:
-	//UPROPERTY(BlueprintReadOnly, Replicated, Category = "ALS|Essential Information")
-	//FVector ReplicatedControlLocation = FVector::ZeroVector;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	float AimMaxRadius = 2000.f;
+	float AimMaxRadius = 500.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FRotator MovementFixedRotation;

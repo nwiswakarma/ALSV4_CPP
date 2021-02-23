@@ -54,14 +54,14 @@ public:
 	AALSCharacterTopDown* TopDownCharacter = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float CameraPivotRadius = 1000.f;
+	float CameraPivotRadius = 500.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float CameraPivotExp = 2.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float FixedCameraPitch = -70.f;
+	float FixedCameraPitch = -60.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float FixedCameraYaw = -60.f;
+	float FixedCameraYaw = -45.f;
 };

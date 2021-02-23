@@ -15,13 +15,6 @@ AALSCharacterTopDown::AALSCharacterTopDown(const FObjectInitializer& ObjectIniti
     MovementFixedRotation = FRotator(0.f, -45.0f, 0.f);
 }
 
-//void AALSCharacterTopDown::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-//
-//    DOREPLIFETIME_CONDITION(AALSCharacterTopDown, ReplicatedControlLocation, COND_SkipOwner);
-//}
-
 void AALSCharacterTopDown::BeginPlay()
 {
 	Super::BeginPlay();
@@ -56,7 +49,6 @@ FVector AALSCharacterTopDown::GetThirdPersonPivotAnchorLocation()
 
 void AALSCharacterTopDown::PlayerCameraUpInput(float Value)
 {
-    //if (Value != 0.f && Controller && Controller->IsLocalPlayerController())
     //if (! FMath::IsNearlyZero(Value) && Controller && Controller->IsLocalPlayerController())
     if (Controller && Controller->IsLocalPlayerController())
     {
@@ -66,7 +58,7 @@ void AALSCharacterTopDown::PlayerCameraUpInput(float Value)
 
 void AALSCharacterTopDown::PlayerCameraRightInput(float Value)
 {
-    //if (Value != 0.f && Controller && Controller->IsLocalPlayerController())
+    //if (! FMath::IsNearlyZero(Value) && Controller && Controller->IsLocalPlayerController())
     if (Controller && Controller->IsLocalPlayerController())
     {
         UpdateAimInput(Value);
@@ -97,14 +89,8 @@ void AALSCharacterTopDown::SetEssentialValues(float DeltaTime)
 {
     Super::SetEssentialValues(DeltaTime);
 
-    //if (GetLocalRole() != ROLE_SimulatedProxy)
-    //{
-    //    ReplicatedControlLocation = GetControlLocation();
-    //}
-
     // Interp AimingLocation to current control rotation for smooth character rotation movement. Decrease InterpSpeed
     // for slower but smoother movement.
-    //AimingLocation = FMath::VInterpTo(AimingLocation, ReplicatedControlLocation, DeltaTime, 30);
     AimingLocation = FMath::VInterpTo(AimingLocation, GetControlLocation(), DeltaTime, 30);
 }
 

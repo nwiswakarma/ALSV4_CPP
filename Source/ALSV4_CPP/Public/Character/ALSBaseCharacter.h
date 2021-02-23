@@ -356,7 +356,7 @@ protected:
 
 	void OnLandFrictionReset();
 
-	void SetEssentialValues(float DeltaTime);
+	virtual void SetEssentialValues(float DeltaTime);
 
 	void UpdateCharacterMovement();
 
@@ -382,13 +382,13 @@ protected:
 
 	/** Input */
 
-	void PlayerForwardMovementInput(float Value);
+	virtual void PlayerForwardMovementInput(float Value);
 
-	void PlayerRightMovementInput(float Value);
+	virtual void PlayerRightMovementInput(float Value);
 
-	void PlayerCameraUpInput(float Value);
+	virtual void PlayerCameraUpInput(float Value);
 
-	void PlayerCameraRightInput(float Value);
+	virtual void PlayerCameraRightInput(float Value);
 
 	void JumpPressedAction();
 

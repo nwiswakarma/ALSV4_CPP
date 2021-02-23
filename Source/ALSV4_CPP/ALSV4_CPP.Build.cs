@@ -16,6 +16,6 @@ public class ALSV4_CPP : ModuleRules
 		PublicDependencyModuleNames.AddRange(new[]
 			{"Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "AIModule", "GameplayTasks"});
 
-		PrivateDependencyModuleNames.AddRange(new[] {"Slate", "SlateCore"});
+		PrivateDependencyModuleNames.AddRange(new[] {"Slate", "SlateCore", "UMG"});
 	}
 }

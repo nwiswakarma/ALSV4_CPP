@@ -10,6 +10,8 @@
 #include "Character/ALSCharacter.h"
 #include "Character/ALSPlayerCameraManager.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+
 void AALSPlayerController::OnPossess(APawn* NewPawn)
 {
 	PossessedCharacter = Cast<AALSBaseCharacter>(NewPawn);
@@ -18,6 +20,7 @@ void AALSPlayerController::OnPossess(APawn* NewPawn)
 	// Servers want to setup camera only in listen servers.
 	if (!IsRunningDedicatedServer())
 	{
+    UKismetSystemLibrary::PrintString(this, FString(TEXT("CHECK OnPossess() ")) + UKismetSystemLibrary::GetDisplayName(Cast<AALSBaseCharacter>(GetPawn())));
 		SetupCamera();
 	}
 }
@@ -25,12 +28,19 @@ void AALSPlayerController::OnPossess(APawn* NewPawn)
 void AALSPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
+    UKismetSystemLibrary::PrintString(this, FString(TEXT("CHECK OnRep_Pawn() ")) + UKismetSystemLibrary::GetDisplayName(Cast<AALSBaseCharacter>(GetPawn())));
 	SetupCamera();
 }
 
 void AALSPlayerController::SetupCamera()
 {
 	PossessedCharacter = Cast<AALSBaseCharacter>(GetPawn());
+
+    if (! IsValid(PossessedCharacter))
+    {
+        return;
+    }
+
 	check(PossessedCharacter);
 
 	// Call "OnPossess" in Player Camera Manager when possessing a pawn

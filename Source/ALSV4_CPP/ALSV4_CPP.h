@@ -8,3 +8,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#define ECC_ALIAS_WEAPON        ECC_GameTraceChannel1
+#define ECC_ALIAS_PROJECTILE    ECC_GameTraceChannel2
+#define ECC_ALIAS_PICKUP        ECC_GameTraceChannel3

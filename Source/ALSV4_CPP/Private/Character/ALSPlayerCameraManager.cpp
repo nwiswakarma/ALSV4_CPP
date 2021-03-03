@@ -10,6 +10,7 @@
 
 
 #include "Character/ALSBaseCharacter.h"
+#include "Character/ALSPlayerController.h"
 #include "Character/Animation/ALSPlayerCameraBehavior.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -30,14 +31,20 @@ void AALSPlayerCameraManager::OnPossess(AALSBaseCharacter* NewCharacter)
 	UALSPlayerCameraBehavior* CastedBehv = Cast<UALSPlayerCameraBehavior>(CameraBehavior->GetAnimInstance());
 	if (CastedBehv)
 	{
-		CastedBehv->PlayerController = GetOwningPlayerController();
-		CastedBehv->ControlledPawn = ControlledCharacter;
-
-		// Initial position
-		const FVector& TPSLoc = ControlledCharacter->GetThirdPersonPivotTarget().GetLocation();
-		SetActorLocation(TPSLoc);
-		SmoothedPivotTarget.SetLocation(TPSLoc);
+		NewCharacter->SetCameraBehavior(CastedBehv);
+		CastedBehv->MovementState = NewCharacter->GetMovementState();
+		CastedBehv->MovementAction = NewCharacter->GetMovementAction();
+		CastedBehv->bRightShoulder = NewCharacter->IsRightShoulder();
+		CastedBehv->Gait = NewCharacter->GetGait();
+		CastedBehv->SetRotationMode(NewCharacter->GetRotationMode());
+		CastedBehv->Stance = NewCharacter->GetStance();
+		CastedBehv->ViewMode = NewCharacter->GetViewMode();
 	}
+
+	// Initial position
+	const FVector& TPSLoc = ControlledCharacter->GetThirdPersonPivotTarget().GetLocation();
+	SetActorLocation(TPSLoc);
+	SmoothedPivotTarget.SetLocation(TPSLoc);
 }
 
 float AALSPlayerCameraManager::GetCameraBehaviorParam(FName CurveName) const
@@ -165,11 +172,8 @@ bool AALSPlayerCameraManager::CustomCameraBehavior(float DeltaTime, FVector& Loc
 
 	if (HitResult.IsValidBlockingHit())
 	{
-		TargetCameraLocation += (HitResult.Location - HitResult.TraceEnd);
+		TargetCameraLocation += HitResult.Location - HitResult.TraceEnd;
 	}
-
-	// Step 7: Draw Debug Shapes.
-	DrawDebugTargets(PivotTarget.GetLocation());
 
 	// Step 8: Lerp First Person Override and return target camera parameters.
 	FTransform TargetCameraTransform(TargetCameraRotation, TargetCameraLocation, FVector::OneVector);

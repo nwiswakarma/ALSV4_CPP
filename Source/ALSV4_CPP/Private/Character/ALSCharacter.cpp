@@ -7,8 +7,10 @@
 
 
 #include "Character/ALSCharacter.h"
+
 #include "Engine/StaticMesh.h"
-#include "Character/AI/ALSAIController.h"
+#include "AI/ALSAIController.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Weapon/ALSWeapon.h"
 
@@ -156,8 +158,9 @@ void AALSCharacter::OnOverlayStateChanged(EALSOverlayState PreviousState)
 
 void AALSCharacter::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
-    UpdateHeldObjectAnimations();
+	Super::Tick(DeltaTime);
+
+	UpdateHeldObjectAnimations();
 }
 
 void AALSCharacter::BeginPlay()

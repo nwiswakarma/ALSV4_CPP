@@ -21,6 +21,7 @@ class UTimelineComponent;
 class UAnimInstance;
 class UAnimMontage;
 class UALSCharacterAnimInstance;
+class UALSPlayerCameraBehavior;
 enum class EVisibilityBasedAnimTickOption : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpPressedSignature);
@@ -256,17 +257,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ALS|Utility")
 	float GetAnimCurveValue(FName CurveName) const;
 
-	/** Implement on BP to draw debug spheres */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "ALS|Debug")
-	void DrawDebugSpheres();
-
 	/** Camera System */
 
 	UFUNCTION(BlueprintGetter, Category = "ALS|Camera System")
 	bool IsRightShoulder() const { return bRightShoulder; }
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera System")
-	void SetRightShoulder(bool bNewRightShoulder) { bRightShoulder = bNewRightShoulder; }
+	void SetRightShoulder(bool bNewRightShoulder);
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera System")
 	virtual ECollisionChannel GetThirdPersonTraceParams(FVector& TraceOrigin, float& TraceRadius);
@@ -279,6 +276,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera System")
 	void GetCameraParameters(float& TPFOVOut, float& FPFOVOut, bool& bRightShoulderOut) const;
+
+	UFUNCTION(BlueprintCallable, Category = "ALS|Camera System")
+	void SetCameraBehavior(UALSPlayerCameraBehavior* CamBeh) { CameraBehavior = CamBeh; }
 
 	/** Essential Information Getters/Setters */
 
@@ -360,17 +360,11 @@ protected:
 
 	void UpdateCharacterMovement();
 
-	void UpdateDynamicMovementSettingsNetworked(EALSGait AllowedGait);
-
-	void UpdateDynamicMovementSettingsStandalone(EALSGait AllowedGait);
-
 	void UpdateGroundedRotation(float DeltaTime);
 
 	void UpdateInAirRotation(float DeltaTime);
 
 	/** Utils */
-
-	float GetMappedSpeed() const;
 
 	void SmoothCharacterRotation(FRotator Target, float TargetInterpSpeed, float ActorInterpSpeed, float DeltaTime);
 
@@ -482,9 +476,6 @@ protected:
 	EALSOverlayState OverlayState = EALSOverlayState::Default;
 
 	/** Movement System */
-
-	UPROPERTY(BlueprintReadOnly, Category = "ALS|Movement System")
-	FALSMovementSettings CurrentMovementSettings;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ALS|Movement System")
 	FDataTableRowHandle MovementModel;
@@ -613,6 +604,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	UALSCharacterAnimInstance* MainAnimInstance = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	UALSPlayerCameraBehavior* CameraBehavior;
 
 	/** Last time the 'first' crouch/roll button is pressed */
 	float LastStanceInputTime = 0.0f;

@@ -23,12 +23,17 @@ class ALSV4_CPP_API AALSPlayerController : public APlayerController
 
 public:
 	virtual void OnPossess(APawn* NewPawn) override;
+
 	virtual void OnRep_Pawn() override;
+
+	virtual void BeginPlayingState() override;
 
 private:
 	void SetupCamera();
 
-protected:
+	void SetupDebugInputs();
+	
+public:
 	/** Main character reference */
 	UPROPERTY(BlueprintReadOnly, Category = "ALS Player Controller")
 	AALSBaseCharacter* PossessedCharacter = nullptr;

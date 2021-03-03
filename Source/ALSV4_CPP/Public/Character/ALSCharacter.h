@@ -41,7 +41,7 @@ public:
 	/** reattach weapon */
 	virtual void PawnClientRestart() override;
 
-	/** Implement on BP to update held objects */
+	/** Implemented on BP to update held objects */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "ALS|HeldObject")
 	void UpdateHeldObject();
 
@@ -191,4 +191,6 @@ protected:
 
 	/** current firing state */
 	bool bWantsToFire = false;
+private:
+	bool bNeedsColorReset = false;
 };

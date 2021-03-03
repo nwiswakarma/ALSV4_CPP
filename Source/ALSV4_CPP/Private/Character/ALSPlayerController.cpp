@@ -9,30 +9,31 @@
 #include "Character/ALSPlayerController.h"
 #include "Character/ALSCharacter.h"
 #include "Character/ALSPlayerCameraManager.h"
+#include "Components/ALSDebugComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 
 void AALSPlayerController::OnPossess(APawn* NewPawn)
 {
-	PossessedCharacter = Cast<AALSBaseCharacter>(NewPawn);
 	Super::OnPossess(NewPawn);
-
-	// Servers want to setup camera only in listen servers.
+	PossessedCharacter = Cast<AALSBaseCharacter>(NewPawn);
 	if (!IsRunningDedicatedServer())
 	{
-    UKismetSystemLibrary::PrintString(this, FString(TEXT("CHECK OnPossess() ")) + UKismetSystemLibrary::GetDisplayName(Cast<AALSBaseCharacter>(GetPawn())));
+		// Servers want to setup camera only in listen servers.
 		SetupCamera();
 	}
+	SetupDebugInputs();
 }
 
 void AALSPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
-    UKismetSystemLibrary::PrintString(this, FString(TEXT("CHECK OnRep_Pawn() ")) + UKismetSystemLibrary::GetDisplayName(Cast<AALSBaseCharacter>(GetPawn())));
+	PossessedCharacter = Cast<AALSBaseCharacter>(GetPawn());
 	SetupCamera();
 }
 
-void AALSPlayerController::SetupCamera()
+void AALSPlayerController::BeginPlayingState()
 {
 	PossessedCharacter = Cast<AALSBaseCharacter>(GetPawn());
 
@@ -42,11 +43,42 @@ void AALSPlayerController::SetupCamera()
     }
 
 	check(PossessedCharacter);
+	Super::BeginPlayingState();
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		SetupDebugInputs();
+	}
+}
 
+void AALSPlayerController::SetupCamera()
+{
 	// Call "OnPossess" in Player Camera Manager when possessing a pawn
 	AALSPlayerCameraManager* CastedMgr = Cast<AALSPlayerCameraManager>(PlayerCameraManager);
-	if (CastedMgr)
+	if (PossessedCharacter && CastedMgr)
 	{
 		CastedMgr->OnPossess(PossessedCharacter);
+	}
+}
+
+void AALSPlayerController::SetupDebugInputs()
+{
+	// Bind inputs for debugging
+	if (PossessedCharacter)
+	{
+		UActorComponent* Comp = PossessedCharacter->GetComponentByClass(UALSDebugComponent::StaticClass());
+		if (Comp)
+		{
+			UALSDebugComponent* DebugComp = Cast<UALSDebugComponent>(Comp);
+			if (InputComponent && DebugComp)
+			{
+				InputComponent->BindKey(FKey("Tab"), EInputEvent::IE_Pressed, DebugComp, &UALSDebugComponent::ToggleHud);
+				InputComponent->BindKey(FKey("V"), EInputEvent::IE_Pressed, DebugComp, &UALSDebugComponent::ToggleDebugView);
+				InputComponent->BindKey(FKey("T"), EInputEvent::IE_Pressed, DebugComp, &UALSDebugComponent::ToggleTraces);
+				InputComponent->BindKey(FKey("Y"), EInputEvent::IE_Pressed, DebugComp, &UALSDebugComponent::ToggleDebugShapes);
+				InputComponent->BindKey(FKey("U"), EInputEvent::IE_Pressed, DebugComp, &UALSDebugComponent::ToggleLayerColors);
+				InputComponent->BindKey(FKey("I"), EInputEvent::IE_Pressed, DebugComp, &UALSDebugComponent::ToggleCharacterInfo);
+				InputComponent->BindKey(FKey("Z"), EInputEvent::IE_Pressed, DebugComp, &UALSDebugComponent::ToggleSlomo);
+			}
+		}
 	}
 }

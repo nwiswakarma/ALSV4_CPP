@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include "ALSCharacterEnumLibrary.h"
 #include "CoreMinimal.h"
+#include "ALSCharacterEnumLibrary.h"
+#include "Library/ALSCharacterStructLibrary.h"
 #include "ALSMathLibrary.generated.h"
 
 struct FALSComponentAndTransform;

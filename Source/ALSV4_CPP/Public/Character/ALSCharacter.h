@@ -52,6 +52,9 @@ public:
 	void AttachToHand(UStaticMesh* NewStaticMesh, USkeletalMesh* NewSkeletalMesh,
 	                  class UClass* NewAnimClass, bool bLeftHand, FVector Offset);
 
+	UFUNCTION(BlueprintCallable, Category = "ALS|HeldObject")
+	void AttachComponentToHand(USceneComponent* NewComponent, bool bLeftHand = false);
+
 	virtual void RagdollStart() override;
 
 	virtual void RagdollEnd() override;

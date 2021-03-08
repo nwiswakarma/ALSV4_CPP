@@ -85,11 +85,18 @@ void AALSBaseCharacter::OnBreakfall_Implementation()
 	Replicated_PlayMontage(GetRollAnimation(), 1.35);
 }
 
-void AALSBaseCharacter::Replicated_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate)
+float AALSBaseCharacter::Replicated_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate)
 {
-	// Roll: Simply play a Root Motion Montage.
-	MainAnimInstance->Montage_Play(Montage, PlayRate);
+    float Duration = 0.f;
+	Duration = MainAnimInstance->Montage_Play(Montage, PlayRate);
 	Server_PlayMontage(Montage, PlayRate);
+    return Duration;
+}
+
+void AALSBaseCharacter::Replicated_StopMontage_Implementation(float BlendOutTime, UAnimMontage* Montage)
+{
+	MainAnimInstance->Montage_Stop(BlendOutTime, Montage);
+	Server_StopMontage(BlendOutTime, Montage);
 }
 
 void AALSBaseCharacter::BeginPlay()
@@ -473,6 +480,21 @@ void AALSBaseCharacter::Multicast_PlayMontage_Implementation(UAnimMontage* Monta
 	if (!IsLocallyControlled())
 	{
 		MainAnimInstance->Montage_Play(Montage, PlayRate);
+	}
+}
+
+void AALSBaseCharacter::Server_StopMontage_Implementation(float BlendOutTime, UAnimMontage* Montage)
+{
+	MainAnimInstance->Montage_Stop(BlendOutTime, Montage);
+	ForceNetUpdate();
+	Multicast_StopMontage(BlendOutTime, Montage);
+}
+
+void AALSBaseCharacter::Multicast_StopMontage_Implementation(float BlendOutTime, UAnimMontage* Montage)
+{
+	if (!IsLocallyControlled())
+	{
+		MainAnimInstance->Montage_Stop(BlendOutTime, Montage);
 	}
 }
 

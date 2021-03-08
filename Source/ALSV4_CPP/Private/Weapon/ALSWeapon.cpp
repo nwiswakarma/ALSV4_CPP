@@ -8,9 +8,15 @@
 //#include "Online/ShooterPlayerState.h"
 //#include "UI/ShooterHUD.h"
 //#include "Camera/CameraShake.h"
+#include "Kismet/KismetMathLibrary.h"
+
+#include "Kismet/KismetSystemLibrary.h"
 
 AALSWeapon::AALSWeapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    WeaponRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WeaponRoot"));
+    RootComponent = WeaponRoot;
+
     Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
     Mesh1P->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
     Mesh1P->bReceivesDecals = false;
@@ -18,7 +24,8 @@ AALSWeapon::AALSWeapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
     Mesh1P->SetCollisionObjectType(ECC_WorldDynamic);
     Mesh1P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Mesh1P->SetCollisionResponseToAllChannels(ECR_Ignore);
-    RootComponent = Mesh1P;
+    //RootComponent = Mesh1P;
+    Mesh1P->SetupAttachment(RootComponent);
 
     Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
     Mesh3P->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
@@ -30,7 +37,8 @@ AALSWeapon::AALSWeapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
     Mesh3P->SetCollisionResponseToChannel(ECC_ALIAS_WEAPON, ECR_Block);
     Mesh3P->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
     Mesh3P->SetCollisionResponseToChannel(ECC_ALIAS_PROJECTILE, ECR_Block);
-    Mesh3P->SetupAttachment(Mesh1P);
+    //Mesh3P->SetupAttachment(Mesh1P);
+    Mesh3P->SetupAttachment(RootComponent);
 
     bLoopedMuzzleFX = false;
     bLoopedFireAnim = false;
@@ -45,6 +53,11 @@ AALSWeapon::AALSWeapon(const FObjectInitializer& ObjectInitializer) : Super(Obje
     CurrentAmmoInClip = 0;
     BurstCounter = 0;
     LastFireTime = 0.0f;
+
+    MyPawnPC = nullptr;
+    MyPawnAC = nullptr;
+    bIsPlayerControlled = false;
+    bIsAIControlled = false;
 
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -176,45 +189,58 @@ void AALSWeapon::OnLeaveInventory()
 
     if (GetLocalRole() == ROLE_Authority)
     {
-        SetOwningPawn(NULL);
+        SetOwningPawn(nullptr);
     }
 }
 
 void AALSWeapon::AttachMeshToPawn()
 {
+    //if (MyPawn)
+    //{
+    //    // Remove and hide both first and third person meshes
+    //    DetachMeshFromPawn();
+
+    //    // For locally controller players we attach both weapons
+    //    // and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
+    //    FName AttachPoint = MyPawn->GetWeaponAttachPoint();
+    //    if( MyPawn->IsLocallyControlled() == true )
+    //    {
+    //        USkeletalMeshComponent* PawnMesh1p = MyPawn->GetSpecifcPawnMesh(true);
+    //        USkeletalMeshComponent* PawnMesh3p = MyPawn->GetSpecifcPawnMesh(false);
+    //        Mesh1P->SetHiddenInGame( false );
+    //        Mesh3P->SetHiddenInGame( false );
+    //        Mesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+    //        Mesh3P->AttachToComponent(PawnMesh3p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+    //    }
+    //    else
+    //    {
+    //        USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
+    //        USkeletalMeshComponent* UsePawnMesh = MyPawn->GetPawnMesh();
+    //        UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+    //        UseWeaponMesh->SetHiddenInGame( false );
+    //    }
+    //}
+
     if (MyPawn)
     {
         // Remove and hide both first and third person meshes
         DetachMeshFromPawn();
 
-        // For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
-        //FName AttachPoint = MyPawn->GetWeaponAttachPoint();
-        FName AttachPoint;
-        if( MyPawn->IsLocallyControlled() == true )
-        {
-            //USkeletalMeshComponent* PawnMesh1p = MyPawn->GetSpecifcPawnMesh(true);
-            //USkeletalMeshComponent* PawnMesh3p = MyPawn->GetSpecifcPawnMesh(false);
-            Mesh1P->SetHiddenInGame( false );
-            Mesh3P->SetHiddenInGame( false );
-            //Mesh1P->AttachToComponent(PawnMesh1p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-            //Mesh3P->AttachToComponent(PawnMesh3p, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-        }
-        else
-        {
-            USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
-            //USkeletalMeshComponent* UsePawnMesh = MyPawn->GetPawnMesh();
-            //UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
-            UseWeaponMesh->SetHiddenInGame( false );
-        }
+        // Attach weapon root to pawn hand bone
+        MyPawn->AttachComponentToHand(WeaponRoot, false);
+
+        // Set mesh visibility
+        Mesh3P->SetHiddenInGame(false);
     }
 }
 
 void AALSWeapon::DetachMeshFromPawn()
 {
-    Mesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-    Mesh1P->SetHiddenInGame(true);
+    // Detach weapon root from parent
+    WeaponRoot->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
 
-    Mesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+    // Hide mesh visibility
+    Mesh1P->SetHiddenInGame(true);
     Mesh3P->SetHiddenInGame(true);
 }
 
@@ -448,16 +474,18 @@ void AALSWeapon::HandleFiring()
             BurstCounter++;
         }
     }
-    else if (CanReload())
+    else
+    if (CanReload())
     {
         StartReload();
     }
-    else if (MyPawn && MyPawn->IsLocallyControlled())
+    else
+    if (MyPawn && MyPawn->IsLocallyControlled())
     {
         if (GetCurrentAmmo() == 0 && !bRefiring)
         {
             PlayWeaponSound(OutOfAmmoSound);
-            AALSPlayerController* MyPC = Cast<AALSPlayerController>(MyPawn->Controller);
+            //AALSPlayerController* MyPC = Cast<AALSPlayerController>(MyPawn->Controller);
             //AALSHUD* MyHUD = MyPC ? Cast<AALSHUD>(MyPC->GetHUD()) : NULL;
             //if (MyHUD)
             //{
@@ -649,7 +677,13 @@ float AALSWeapon::PlayWeaponAnimation(const FWeaponAnim& Animation)
     //        Duration = MyPawn->PlayAnimMontage(UseAnim);
     //    }
     //}
-
+    if (IsValid(Animation.PawnAnim) && IsValid(MyPawn))
+    {
+        Duration = MyPawn->Replicated_PlayMontage(
+            Animation.PawnAnim,
+            Animation.PawnAnimPlayRate
+            );
+    }
     return Duration;
 }
 
@@ -663,21 +697,27 @@ void AALSWeapon::StopWeaponAnimation(const FWeaponAnim& Animation)
     //        MyPawn->StopAnimMontage(UseAnim);
     //    }
     //}
+    if (IsValid(Animation.PawnAnim) && IsValid(MyPawn))
+    {
+        MyPawn->Replicated_StopMontage(0.f, Animation.PawnAnim);
+    }
 }
 
 FVector AALSWeapon::GetCameraAim() const
 {
-    AALSPlayerController* const PlayerController = GetInstigatorController<AALSPlayerController>();
     FVector FinalAim = FVector::ZeroVector;
 
-    if (PlayerController)
+    if (bIsPlayerControlled)
     {
+        check(IsValid(MyPawnPC));
+
         FVector CamLoc;
         FRotator CamRot;
-        PlayerController->GetPlayerViewPoint(CamLoc, CamRot);
+        MyPawnPC->GetPlayerViewPoint(CamLoc, CamRot);
         FinalAim = CamRot.Vector();
     }
-    else if (GetInstigator())
+    else
+    if (GetInstigator())
     {
         FinalAim = GetInstigator()->GetBaseAimRotation().Vector();      
     }
@@ -687,28 +727,40 @@ FVector AALSWeapon::GetCameraAim() const
 
 FVector AALSWeapon::GetAdjustedAim() const
 {
-    AALSPlayerController* const PlayerController = GetInstigatorController<AALSPlayerController>();
-    FVector FinalAim = FVector::ZeroVector;
-    // If we have a player controller use it for the aim
-    if (PlayerController)
+    // Default is forward vector constant
+    FVector FinalAim = FVector::ForwardVector;
+
+    // Invalid pawn, abort and return default aim
+    if (! IsValid(MyPawn))
     {
-        FVector CamLoc;
-        FRotator CamRot;
-        PlayerController->GetPlayerViewPoint(CamLoc, CamRot);
-        FinalAim = CamRot.Vector();
+        return FinalAim;
     }
-    else if (GetInstigator())
+
+    // If we have a player controller use it for the aim
+    if (bIsPlayerControlled)
     {
-        // Now see if we have an AI controller - we will want to get the aim from there if we do
-        AALSAIController* AIController = MyPawn ? Cast<AALSAIController>(MyPawn->Controller) : NULL;
-        if(AIController != NULL )
-        {
-            FinalAim = AIController->GetControlRotation().Vector();
-        }
-        else
-        {           
-            FinalAim = GetInstigator()->GetBaseAimRotation().Vector();
-        }
+        check(MyPawnPC);
+
+        //FVector CamLoc;
+        //FRotator CamRot;
+        //PlayerController->GetPlayerViewPoint(CamLoc, CamRot);
+        //FinalAim = CamRot.Vector();
+
+        FinalAim = MyPawnPC->GetControlRotation().Vector();
+    }
+    // Now see if we have an AI controller,
+    // we will want to get the aim from there if we do
+    else
+    if (bIsAIControlled)
+    {
+        check(MyPawnAC);
+
+        FinalAim = MyPawnAC->GetControlRotation().Vector();
+    }
+    else
+    if (GetInstigator())
+    {
+        FinalAim = GetInstigator()->GetBaseAimRotation().Vector();
     }
 
     return FinalAim;
@@ -716,20 +768,21 @@ FVector AALSWeapon::GetAdjustedAim() const
 
 FVector AALSWeapon::GetCameraDamageStartLocation(const FVector& AimDir) const
 {
-    AALSPlayerController* PC = MyPawn ? Cast<AALSPlayerController>(MyPawn->Controller) : NULL;
-    AALSAIController* AIPC = MyPawn ? Cast<AALSAIController>(MyPawn->Controller) : NULL;
     FVector OutStartTrace = FVector::ZeroVector;
 
-    if (PC)
+    if (bIsPlayerControlled)
     {
+        check(MyPawnPC);
+
         // use player's camera
         FRotator UnusedRot;
-        PC->GetPlayerViewPoint(OutStartTrace, UnusedRot);
+        MyPawnPC->GetPlayerViewPoint(OutStartTrace, UnusedRot);
 
         // Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
         OutStartTrace = OutStartTrace + AimDir * ((GetInstigator()->GetActorLocation() - OutStartTrace) | AimDir);
     }
-    else if (AIPC)
+    else
+    if (bIsAIControlled)
     {
         OutStartTrace = GetMuzzleLocation();
     }
@@ -770,7 +823,40 @@ void AALSWeapon::SetOwningPawn(AALSCharacter* NewOwner)
         MyPawn = NewOwner;
         // net owner for RPC calls
         SetOwner(NewOwner);
-    }   
+    }
+
+    AssignController();
+}
+
+void AALSWeapon::AssignController()
+{
+    MyPawnPC = nullptr;
+    MyPawnAC = nullptr;
+
+    bIsPlayerControlled = false;
+    bIsAIControlled = false;
+
+    if (IsValid(MyPawn))
+    {
+        // Assign PC
+
+        MyPawnPC = GetInstigatorController<AALSPlayerController>();
+
+        if (IsValid(MyPawnPC))
+        {
+            bIsPlayerControlled = true;
+        }
+        // No PC, Assign AIC
+        else
+        {
+            MyPawnAC = GetInstigatorController<AALSAIController>();
+
+            if (IsValid(MyPawnAC))
+            {
+                bIsAIControlled = true;
+            }
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -778,7 +864,7 @@ void AALSWeapon::SetOwningPawn(AALSCharacter* NewOwner)
 
 void AALSWeapon::OnRep_MyPawn()
 {
-    if (MyPawn)
+    if (IsValid(MyPawn))
     {
         OnEnterInventory(MyPawn);
     }
@@ -866,12 +952,11 @@ void AALSWeapon::SimulateWeaponFire()
         PlayWeaponSound(FireSound);
     }
 
-    AALSPlayerController* PC = (MyPawn != NULL) ? Cast<AALSPlayerController>(MyPawn->Controller) : NULL;
-    if (PC != NULL && PC->IsLocalController())
+    if (IsValid(MyPawnPC) && MyPawnPC->IsLocalController())
     {
         if (FireCameraShake != NULL)
         {
-            PC->ClientStartCameraShake(FireCameraShake, 1);
+            MyPawnPC->ClientStartCameraShake(FireCameraShake, 1);
         }
         //if (FireForceFeedback != NULL && PC->IsVibrationEnabled())
         //{

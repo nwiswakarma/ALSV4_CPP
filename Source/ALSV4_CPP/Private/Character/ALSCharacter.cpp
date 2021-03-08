@@ -107,6 +107,40 @@ void AALSCharacter::AttachToHand(
     HeldObjectRoot->SetRelativeLocation(Offset);
 }
 
+void AALSCharacter::AttachComponentToHand(USceneComponent* NewComponent, bool bLeftHand)
+{
+    ClearHeldObject();
+
+    // Invalid actor to attach, abort
+    if (! IsValid(NewComponent))
+    {
+        return;
+    }
+
+    FName AttachBone;
+    if (bLeftHand)
+    {
+        AttachBone = TEXT("VB LHS_ik_hand_gun");
+    }
+    else
+    {
+        AttachBone = TEXT("VB RHS_ik_hand_gun");
+    }
+
+    // Attach actor to held object root
+    NewComponent->AttachToComponent(
+        HeldObjectRoot,
+        FAttachmentTransformRules::SnapToTargetNotIncludingScale
+        );
+
+    // Attach held object root to skeletal mesh attach bone
+    HeldObjectRoot->AttachToComponent(
+        GetMesh(),
+        FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+        AttachBone
+        );
+}
+
 void AALSCharacter::RagdollStart()
 {
     ClearHeldObject();
@@ -147,7 +181,10 @@ void AALSCharacter::OnOverlayStateChanged(EALSOverlayState PreviousState)
     switch (OverlayState)
     {
         case EALSOverlayState::Rifle:
-            EquipWeapon(Inventory[0]);
+            if (Inventory.IsValidIndex(0))
+            {
+                EquipWeapon(Inventory[0]);
+            }
             break;
 
         default:
@@ -273,13 +310,16 @@ void AALSCharacter::EquipWeapon(AALSWeapon* Weapon)
     //    }
     //}
 
-    if (GetLocalRole() == ROLE_Authority)
+    if (Weapon != CurrentWeapon)
     {
-        SetCurrentWeapon(Weapon, CurrentWeapon);
-    }
-    else
-    {
-        ServerEquipWeapon(Weapon);
+        if (GetLocalRole() == ROLE_Authority)
+        {
+            SetCurrentWeapon(Weapon, CurrentWeapon);
+        }
+        else
+        {
+            ServerEquipWeapon(Weapon);
+        }
     }
 }
 
@@ -380,7 +420,10 @@ void AALSCharacter::OnStartFire()
     //    }
     //    StartWeaponFire();
     //}
-    StartWeaponFire();
+    if (GetRotationMode() == EALSRotationMode::Aiming)
+    {
+        StartWeaponFire();
+    }
 }
 
 void AALSCharacter::OnStopFire()

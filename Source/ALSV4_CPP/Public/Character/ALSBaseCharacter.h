@@ -156,6 +156,13 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, Category = "ALS|Character States")
 	void Multicast_PlayMontage(UAnimMontage* Montage, float PlayRate);
 
+	/** Rolling Montage Stop Replication*/
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "ALS|Character States")
+	void Server_StopMontage(float BlendOutTime, UAnimMontage* Montage = nullptr);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, Category = "ALS|Character States")
+	void Multicast_StopMontage(float BlendOutTime, UAnimMontage* Montage = nullptr);
+
 	/** Ragdolling*/
 	UFUNCTION(BlueprintCallable, Category = "ALS|Character States")
 	void ReplicatedRagdollStart();
@@ -242,8 +249,13 @@ public:
 
 	/** BP implementable function that called when A Montage starts, e.g. during rolling */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Movement System")
-	void Replicated_PlayMontage(UAnimMontage* Montage, float PlayRate);
-	virtual void Replicated_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate);
+	float Replicated_PlayMontage(UAnimMontage* Montage, float PlayRate);
+	virtual float Replicated_PlayMontage_Implementation(UAnimMontage* Montage, float PlayRate);
+
+	/** BP implementable function that called when A Montage stops */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ALS|Movement System")
+	void Replicated_StopMontage(float BlendOutTime, UAnimMontage* Montage = nullptr);
+	virtual void Replicated_StopMontage_Implementation(float BlendOutTime, UAnimMontage* Montage = nullptr);
 
 	/** Implement on BP to get required roll animation according to character's state */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "ALS|Movement System")

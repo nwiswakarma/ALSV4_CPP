@@ -77,12 +77,28 @@ struct FWeaponAnim
 	GENERATED_USTRUCT_BODY()
 
 	/** animation played on pawn (1st person view) */
-	UPROPERTY(EditDefaultsOnly, Category=Animation)
-	UAnimMontage* Pawn1P;
+	//UPROPERTY(EditDefaultsOnly, Category=Animation)
+	//UAnimMontage* Pawn1P;
 
 	/** animation played on pawn (3rd person view) */
+	//UPROPERTY(EditDefaultsOnly, Category=Animation)
+	//UAnimMontage* Pawn3P;
+
+	/** animation played on pawn */
 	UPROPERTY(EditDefaultsOnly, Category=Animation)
-	UAnimMontage* Pawn3P;
+	UAnimMontage* PawnAnim;
+
+	/** animation played on weapon */
+	UPROPERTY(EditDefaultsOnly, Category=Animation)
+	UAnimMontage* WeaponAnim;
+
+	/** pawn animation play rate */
+	UPROPERTY(EditDefaultsOnly, Category=Animation)
+	float PawnAnimPlayRate = 1.f;
+
+	/** weapon animation play rate */
+	UPROPERTY(EditDefaultsOnly, Category=Animation)
+	float WeaponAnimPlayRate = 1.f;
 };
 
 UCLASS(Abstract, Blueprintable)
@@ -269,6 +285,9 @@ class AALSWeapon : public AActor
 	/** set the weapon's owning pawn */
 	void SetOwningPawn(AALSCharacter* AALSCharacter);
 
+    /** Assign owning controller */
+    void AssignController();
+
 	/** gets last time when this weapon was switched to */
 	float GetEquipStartedTime() const;
 
@@ -276,10 +295,27 @@ class AALSWeapon : public AActor
 	float GetEquipDuration() const;
 
 protected:
-
 	/** pawn owner */
 	UPROPERTY(Transient, ReplicatedUsing=OnRep_MyPawn)
 	class AALSCharacter* MyPawn;
+
+	/** pawn controller */
+	UPROPERTY(Transient)
+	class AALSPlayerController* MyPawnPC;
+
+	/** pawn controller */
+	UPROPERTY(Transient)
+	class AALSAIController* MyPawnAC;
+
+    /** is pawn player controlled */
+    bool bIsPlayerControlled = false;
+
+    /** is pawn ai controlled */
+    bool bIsAIControlled = false;
+
+    /** weapon mesh root */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USceneComponent* WeaponRoot;
 
 	/** weapon data */
 	UPROPERTY(EditDefaultsOnly, Category=Config)
@@ -293,8 +329,8 @@ private:
 	/** weapon mesh: 3rd person view */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh3P;
-protected:
 
+protected:
 	/** firing audio (bLoopedFireSound set) */
 	UPROPERTY(Transient)
 	UAudioComponent* FireAC;
@@ -522,10 +558,10 @@ protected:
 	FVector GetCameraDamageStartLocation(const FVector& AimDir) const;
 
 	/** get the muzzle location of the weapon */
-	FVector GetMuzzleLocation() const;
+	virtual FVector GetMuzzleLocation() const;
 
 	/** get direction of weapon's muzzle */
-	FVector GetMuzzleDirection() const;
+	virtual FVector GetMuzzleDirection() const;
 
 	/** find hit */
 	FHitResult WeaponTrace(const FVector& TraceFrom, const FVector& TraceTo) const;

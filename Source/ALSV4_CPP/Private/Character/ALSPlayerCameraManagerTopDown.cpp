@@ -27,8 +27,8 @@ void AALSPlayerCameraManagerTopDown::OnPossess(AALSBaseCharacter* NewCharacter)
 	UALSPlayerCameraBehavior* CastedBehv = Cast<UALSPlayerCameraBehavior>(CameraBehavior->GetAnimInstance());
 	if (CastedBehv)
 	{
-		CastedBehv->PlayerController = GetOwningPlayerController();
-		CastedBehv->ControlledPawn = ControlledCharacter;
+		//CastedBehv->PlayerController = GetOwningPlayerController();
+		//CastedBehv->ControlledPawn = ControlledCharacter;
 
 		// Initial position
 		const FVector& TPSLoc = ControlledCharacter->GetThirdPersonPivotTarget().GetLocation();

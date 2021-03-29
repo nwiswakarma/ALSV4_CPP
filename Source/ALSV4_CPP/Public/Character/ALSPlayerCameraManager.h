@@ -26,7 +26,7 @@ public:
 	AALSPlayerCameraManager();
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
-	void OnPossess(AALSBaseCharacter* NewCharacter);
+	virtual void OnPossess(AALSBaseCharacter* NewCharacter);
 
 	UFUNCTION(BlueprintCallable, Category = "ALS|Camera")
 	float GetCameraBehaviorParam(FName CurveName) const;

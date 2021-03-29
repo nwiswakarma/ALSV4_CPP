@@ -28,6 +28,11 @@ void UALSAnimNotifyFootstep::Notify(USkeletalMeshComponent* MeshComp, UAnimSeque
 		UWorld* World = MeshComp->GetWorld();
 		AActor* MeshOwner = MeshComp->GetOwner();
 
+        if (! World || ! MeshOwner)
+        {
+            return;
+        }
+
 		const FVector FootLocation = MeshComp->GetSocketLocation(FootSocketName);
 		const FRotator FootRotation = MeshComp->GetSocketRotation(FootSocketName);
 		const FVector TraceEnd = FootLocation - MeshOwner->GetActorUpVector() * TraceLength;
